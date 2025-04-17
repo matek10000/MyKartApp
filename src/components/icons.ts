@@ -28,6 +28,7 @@ const Icons = {
   spinner: Loader2,
   trash: Trash,
   user: User,
+  // racingFlag: RacingFlag,
 };
 
 export {Icons};
