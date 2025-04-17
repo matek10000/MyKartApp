@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 
 type LapTimeEntry = {
   trackName: string;
@@ -143,32 +144,32 @@ export default function Home() {
 
     return (
       <Card
-        className="w-64 h-48 bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+        className="w-64 h-48 bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center flex-col"
         onClick={() => {
           setOpen(true);
           setSelectedTrack(trackName);
         }}
       >
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">{trackName}</CardTitle>
+        <CardHeader className="flex flex-col items-center">
+          <CardTitle className="text-xl font-bold text-center">{trackName}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col items-center">
           {latestLap ? (
             <>
-              <p className="text-sm">
-                Best Lap: {latestLap.lapTime.toFixed(3)}s
+              <p className="text-sm text-center">
+                Najlepszy czas: {latestLap.lapTime.toFixed(3)}s
               </p>
-              <p className="text-xs text-muted-foreground">
-                Date: {format(latestLap.date, "PPP")}
+              <p className="text-xs text-muted-foreground text-center">
+                Data: {format(latestLap.date, "PPP")}
               </p>
               {timeDifference && (
-                <p className="text-xs text-muted-foreground">
-                  Difference: {timeDifference}
+                <p className="text-xs text-muted-foreground text-center">
+                  Różnica: {timeDifference}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-sm">No laps recorded yet.</p>
+            <p className="text-sm text-center">Brak okrążeń.</p>
           )}
         </CardContent>
       </Card>
@@ -179,7 +180,7 @@ export default function Home() {
     return (
       <Card className="w-64 h-48 bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center">
         <Button variant="ghost" size="lg" onClick={() => {}}>
-          +
+          <Plus/>
         </Button>
       </Card>
     );
@@ -197,15 +198,15 @@ export default function Home() {
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Lap Time for {selectedTrack}</DialogTitle>
+            <DialogTitle>Aktualizuj czas okrążenia dla {selectedTrack}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="lapTime">New Lap Time (seconds)</Label>
+              <Label htmlFor="lapTime">Nowy czas okrążenia (sekundy)</Label>
               <Input
                 id="lapTime"
                 type="number"
-                placeholder="Enter new lap time"
+                placeholder="Wprowadź nowy czas okrążenia"
                 value={newLapTime !== undefined ? newLapTime.toString() : ""}
                 onChange={(e) => {
                   const value = parseFloat(e.target.value);
@@ -214,7 +215,7 @@ export default function Home() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Date</Label>
+              <Label>Data</Label>
               <Calendar
                 mode="single"
                 selected={newDate}
@@ -224,7 +225,7 @@ export default function Home() {
             </div>
           </div>
           <Button onClick={() => handleUpdateLapTime(selectedTrack)}>
-            Update Lap Time
+            Aktualizuj czas okrążenia
           </Button>
         </DialogContent>
       </Dialog>
