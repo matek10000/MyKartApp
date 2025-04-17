@@ -159,20 +159,20 @@ export default function Home() {
         <CardContent className="flex flex-col items-center">
           {latestLap ? (
             <>
-              <p className="text-sm text-center text-white">
+              <p className="text-sm text-center">
                 Najlepszy czas: {latestLap.lapTime.toFixed(3)}s
               </p>
-              <p className="text-xs text-muted-foreground text-center text-white">
+              <p className="text-xs text-muted-foreground text-center">
                 Data: {format(latestLap.date, "PPP")}
               </p>
               {timeDifference && (
-                <p className="text-xs text-muted-foreground text-center text-white">
+                <p className="text-xs text-muted-foreground text-center">
                   Różnica: {timeDifference}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-sm text-center text-white">Brak okrążeń.</p>
+            <p className="text-sm text-center">Brak okrążeń.</p>
           )}
         </CardContent>
       </Card>
@@ -180,24 +180,40 @@ export default function Home() {
   };
 
   const AddTrackTile = () => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement | HTMLDivElement>) => {
+        e.stopPropagation();
+        setIsAddingTrack(true);
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      handleTrackNameChange(e);
+    }
+
+    const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      handleAddTrack();
+    }
+
     return (
       <Card className="w-64 h-48 bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center"
-           onClick={() => setIsAddingTrack(true)}>
+           onClick={handleClick}>
         {isAddingTrack ? (
-          <div className="flex flex-col items-center justify-center p-4">
+          <div className="flex flex-col items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
             <Input
               type="text"
               placeholder="Nazwa toru"
               value={newTrackName}
-              onChange={handleTrackNameChange}
+              onChange={handleInputChange}
               className="mb-2 text-black"
+              onClick={(e) => e.stopPropagation()}
             />
-            <Button onClick={handleAddTrack} className="w-full">Dodaj Tor</Button>
+            <Button onClick={handleAdd} className="w-full" onClick={(e) => e.stopPropagation()}>Dodaj Tor</Button>
           </div>
         ) : (
-          <Button variant="ghost" size="lg" onClick={() => setIsAddingTrack(true)}>
+          <Button variant="ghost" size="lg" onClick={handleClick}>
             <Plus />
-            <span className="text-white">Dodaj Tor</span>
+            <span>Dodaj Tor</span>
           </Button>
         )}
       </Card>
@@ -220,7 +236,7 @@ export default function Home() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="lapTime" className="text-white">Nowy czas okrążenia (sekundy)</Label>
+              <Label htmlFor="lapTime">Nowy czas okrążenia (sekundy)</Label>
               <Input
                 id="lapTime"
                 type="number"
@@ -234,7 +250,7 @@ export default function Home() {
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-white">Data</Label>
+              <Label>Data</Label>
               <Calendar
                 mode="single"
                 selected={newDate}
