@@ -109,10 +109,10 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
-      <h1 className="text-3xl font-bold mb-4">MyKart</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <h1 className="text-3xl font-bold mb-4 text-foreground">MyKart</h1>
       <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
-        <Card className="w-full md:w-1/2 bg-black">
+        <Card className="w-full md:w-1/2 bg-card text-card-foreground">
           <CardHeader>
             <CardTitle>Dodaj Nowy Czas Okrążenia</CardTitle>
             <CardDescription>Wprowadź nazwę toru, czas okrążenia i datę.</CardDescription>
@@ -121,7 +121,7 @@ export default function Home() {
             <div className="grid gap-2">
               <Label htmlFor="trackName">Nazwa Toru</Label>
               <Select onValueChange={setSelectedTrack}>
-                <SelectTrigger className="text-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Wybierz tor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -147,7 +147,6 @@ export default function Home() {
                     placeholder="Wprowadź nazwę toru"
                     value={newTrackName}
                     onChange={handleTrackNameChange}
-                    className="text-white"
                   />
                   <Button type="button" size="sm" onClick={handleAddTrack}>
                     Dodaj Tor
@@ -163,7 +162,6 @@ export default function Home() {
                 placeholder="Wprowadź czas okrążenia"
                 value={lapTime !== undefined ? lapTime.toString() : ""}
                 onChange={handleLapTimeChange}
-                className="text-white"
               />
             </div>
             <div className="grid gap-2">
@@ -172,7 +170,7 @@ export default function Home() {
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                className={cn("rounded-md border text-white")}
+                className={cn("rounded-md border")}
               />
               {date ? (
                 <p className="text-sm text-muted-foreground">
@@ -188,7 +186,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="w-full md:w-1/2 bg-black">
+        <Card className="w-full md:w-1/2 bg-card text-card-foreground">
           <CardHeader>
             <CardTitle>Lista Czasów Okrążeń</CardTitle>
             <CardDescription>Lista Twoich najlepszych czasów okrążeń dla każdego toru.</CardDescription>
@@ -218,4 +216,5 @@ export default function Home() {
        </div>
   );
 }
+
 
