@@ -43,7 +43,7 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Updated values */
-    --background: 0 0% 90%; /* Light Gray */
+    --background: 0 0% 100%; /* White */
     --foreground: 0 0% 10%; /* Dark Gray */
     --accent: 120 100% 50%; /* Green */
     --primary: 0 0% 20%; /* Dark Gray */
@@ -94,3 +94,4 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
