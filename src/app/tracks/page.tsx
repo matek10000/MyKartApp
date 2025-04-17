@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Star, StarOff } from "lucide-react";
 
 type LapTimeEntry = {
   trackName: string;
@@ -69,6 +69,8 @@ const translations = {
     enterTrackNameError: "Wprowadź nazwę toru.",
     fillAllFields: "Wypełnij wszystkie pola.",
     lapTimeUpdated: "Czas okrążenia zaktualizowany.",
+        starTrack: "Oznacz tor gwiazdką",
+    unstarTrack: "Usuń gwiazdkę z toru",
     updateLapTimeFor: (trackName: string) => `Aktualizuj czas okrążenia dla ${trackName}`,
   },
   en: {
@@ -91,6 +93,8 @@ const translations = {
     enterTrackNameError: "Enter track name.",
     fillAllFields: "Fill all fields.",
     lapTimeUpdated: "Lap time updated.",
+        starTrack: "Star Track",
+    unstarTrack: "Unstar Track",
     updateLapTimeFor: (trackName: string) => `Update lap time for ${trackName}`,
   },
 };
@@ -108,6 +112,7 @@ export default function Home() {
   const [tracks, setTracks] = useState<string[]>(initialTracks);
   const [isAddingTrack, setIsAddingTrack] = useState(false);
   const [newTrackName, setNewTrackName] = useState("");
+    const [starredTracks, setStarredTracks] = useState<string[]>([]);
   const [language, setLanguage] = useState("pl");
     const [translation, setTranslation] = useState(translations.pl);
 
@@ -127,6 +132,18 @@ export default function Home() {
   const handleTrackNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewTrackName(e.target.value);
   };
+
+    const sortedTracks = [...tracks].sort((a, b) => {
+        const aStarred = starredTracks.includes(a);
+        const bStarred = starredTracks.includes(b);
+        if (aStarred && !bStarred) {
+            return -1;
+        }
+        if (!aStarred && bStarred) {
+            return 1;
+        }
+        return 0;
+    });
 
   const handleAddTrack = () => {
     if (newTrackName && !tracks.includes(newTrackName)) {
@@ -195,6 +212,16 @@ export default function Home() {
     return `(${difference > 0 ? "+" : ""}${formattedDifference}s)`;
   };
 
+    const toggleStarTrack = (trackName: string) => {
+        setStarredTracks(prevStarredTracks => {
+            if (prevStarredTracks.includes(trackName)) {
+                return prevStarredTracks.filter(name => name !== trackName);
+            } else {
+                return [...prevStarredTracks, trackName];
+            }
+        });
+    };
+
   const TrackTile = ({ trackName }: { trackName: string }) => {
     const latestLap = trackLapTimes[trackName]?.[0];
     const previousLap = trackLapTimes[trackName]?.[1];
@@ -202,6 +229,8 @@ export default function Home() {
       latestLap && previousLap
         ? calculateDifference(latestLap.lapTime, previousLap.lapTime)
         : null;
+
+        const isStarred = starredTracks.includes(trackName);
 
     return (
       <Card
@@ -211,6 +240,21 @@ export default function Home() {
           setSelectedTrack(trackName);
         }}
       >
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 text-white"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleStarTrack(trackName);
+                }}
+                >
+                {isStarred ? (
+                    <Star className="h-4 w-4 text-yellow-500" />
+                ) : (
+                    <StarOff className="h-4 w-4" />
+                )}
+            </Button>
         <CardHeader className="flex flex-col items-center">
           <CardTitle className="text-xl font-bold text-center">{trackName}</CardTitle>
         </CardHeader>
@@ -285,7 +329,7 @@ export default function Home() {
               </Button>
       <h1 className="text-3xl font-bold mb-4 text-foreground">{translation.title}</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl">
-        {tracks.map((track) => (
+        {sortedTracks.map((track) => (
           <TrackTile key={track} trackName={track} />
         ))}
         <AddTrackTile />
