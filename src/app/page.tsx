@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type LapTimeEntry = {
   trackName: string;
@@ -134,19 +135,26 @@ export default function Home() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="newTrackName">Dodaj Nowy Tor</Label>
-              <Input
-                id="newTrackName"
-                placeholder="Wprowadź nazwę toru"
-                value={newTrackName}
-                onChange={handleTrackNameChange}
-                className="text-white"
-              />
-              <Button type="button" size="sm" onClick={handleAddTrack}>
-                Dodaj Tor
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Dodaj Nowy Tor</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="p-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="newTrackName">Nazwa Toru</Label>
+                  <Input
+                    id="newTrackName"
+                    placeholder="Wprowadź nazwę toru"
+                    value={newTrackName}
+                    onChange={handleTrackNameChange}
+                    className="text-white"
+                  />
+                  <Button type="button" size="sm" onClick={handleAddTrack}>
+                    Dodaj Tor
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="grid gap-2">
               <Label htmlFor="lapTime">Czas Okrążenia (sekundy)</Label>
               <Input
