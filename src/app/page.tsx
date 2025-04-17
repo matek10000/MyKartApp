@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,10 +15,22 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type LapTimeEntry = {
   trackName: string;
@@ -30,21 +48,23 @@ const predefinedTracks = [
 ];
 
 export default function Home() {
-  const [selectedTrack, setSelectedTrack] = useState("");
-  const [newTrackName, setNewTrackName] = useState("");
-  const [lapTime, setLapTime] = useState<number | undefined>(undefined);
-  const [date, setDate] = useState<Date | undefined>(undefined);
   const [lapTimes, setLapTimes] = useState<LapTimeEntry[]>([]);
-  const [bestLap, setBestLap] = useState<LapTimeEntry | null>(null);
+  const [trackLapTimes, setTrackLapTimes] = useState<{
+    [trackName: string]: LapTimeEntry[];
+  }>({});
   const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState("");
+  const [newLapTime, setNewLapTime] = useState<number | undefined>(undefined);
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newTrackName, setNewTrackName] = useState("");
+
+  const handleOpenChange = () => {
+    setOpen(!open);
+  };
 
   const handleTrackNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewTrackName(e.target.value);
-  };
-
-  const handleLapTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setLapTime(isNaN(value) ? undefined : value);
   };
 
   const handleAddTrack = () => {
@@ -55,15 +75,13 @@ export default function Home() {
         title: "Sukces",
         description: "Tor dodany do listy.",
       });
-    }
-     else if (newTrackName && predefinedTracks.includes(newTrackName)) {
-       toast({
-         title: "Błąd",
-         description: "Tor już jest na liście.",
-         variant: "destructive",
-       });
-     }
-    else {
+    } else if (newTrackName && predefinedTracks.includes(newTrackName)) {
+      toast({
+        title: "Błąd",
+        description: "Tor już jest na liście.",
+        variant: "destructive",
+      });
+    } else {
       toast({
         title: "Błąd",
         description: "Wprowadź nazwę toru.",
@@ -72,8 +90,8 @@ export default function Home() {
     }
   };
 
-  const handleSubmit = () => {
-    if (!selectedTrack || !lapTime || !date) {
+  const handleUpdateLapTime = (trackName: string) => {
+    if (!newLapTime || !newDate) {
       toast({
         title: "Błąd",
         description: "Wypełnij wszystkie pola.",
@@ -82,139 +100,134 @@ export default function Home() {
       return;
     }
 
-    const newLapTimeEntry: LapTimeEntry = {
-      trackName: selectedTrack,
-      lapTime,
-      date,
+    const newEntry: LapTimeEntry = {
+      trackName: trackName,
+      lapTime: newLapTime,
+      date: newDate,
     };
 
-    setLapTimes([...lapTimes, newLapTimeEntry]);
+    setTrackLapTimes(prev => {
+      const updatedLapTimes = { ...prev };
+      if (!updatedLapTimes[trackName]) {
+        updatedLapTimes[trackName] = [];
+      }
+      updatedLapTimes[trackName] = [newEntry, ...updatedLapTimes[trackName]];
+      return updatedLapTimes;
+    });
 
-    if (!bestLap || lapTime < bestLap.lapTime) {
-      setBestLap(newLapTimeEntry);
-      toast({
-        title: "Nowy Najlepszy Czas!",
-        description: `Nowy najlepszy czas dla ${selectedTrack}: ${lapTime.toFixed(3)}`,
-      });
-    } else {
-      toast({
-        title: "Dodano Czas Okrążenia",
-        description: `Czas okrążenia dla ${selectedTrack}: ${lapTime.toFixed(3)}`,
-      });
-    }
+    setOpen(false);
+    setNewLapTime(undefined);
+    setNewDate(undefined);
+    toast({
+      title: "Sukces",
+      description: "Czas okrążenia zaktualizowany.",
+    });
+  };
 
-    setSelectedTrack("");
-    setLapTime(undefined);
-    setDate(undefined);
+  const calculateDifference = (
+    currentLapTime: number,
+    previousLapTime: number
+  ): string => {
+    const difference = currentLapTime - previousLapTime;
+    const formattedDifference = difference.toFixed(3);
+    return `(${difference > 0 ? "+" : ""}${formattedDifference}s)`;
+  };
+
+  const TrackTile = ({ trackName }: { trackName: string }) => {
+    const latestLap = trackLapTimes[trackName]?.[0];
+    const previousLap = trackLapTimes[trackName]?.[1];
+    const timeDifference =
+      latestLap && previousLap
+        ? calculateDifference(latestLap.lapTime, previousLap.lapTime)
+        : null;
+
+    return (
+      <Card
+        className="w-64 h-48 bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+        onClick={() => {
+          setOpen(true);
+          setSelectedTrack(trackName);
+        }}
+      >
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">{trackName}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {latestLap ? (
+            <>
+              <p className="text-sm">
+                Best Lap: {latestLap.lapTime.toFixed(3)}s
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Date: {format(latestLap.date, "PPP")}
+              </p>
+              {timeDifference && (
+                <p className="text-xs text-muted-foreground">
+                  Difference: {timeDifference}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm">No laps recorded yet.</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const AddTrackTile = () => {
+    return (
+      <Card className="w-64 h-48 bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center">
+        <Button variant="ghost" size="lg" onClick={() => {}}>
+          +
+        </Button>
+      </Card>
+    );
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
       <h1 className="text-3xl font-bold mb-4 text-foreground">MyKart</h1>
-      <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
-        <Card className="w-full md:w-1/2 bg-card text-card-foreground">
-          <CardHeader>
-            <CardTitle>Dodaj Nowy Czas Okrążenia</CardTitle>
-            <CardDescription>Wprowadź nazwę toru, czas okrążenia i datę.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl">
+        {predefinedTracks.map((track) => (
+          <TrackTile key={track} trackName={track} />
+        ))}
+        <AddTrackTile />
+      </div>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Lap Time for {selectedTrack}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="trackName">Nazwa Toru</Label>
-              <Select onValueChange={setSelectedTrack}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Wybierz tor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <ScrollArea className="h-[200px] w-[inherit]">
-                    {predefinedTracks.map((track) => (
-                      <SelectItem key={track} value={track}>
-                        {track}
-                      </SelectItem>
-                    ))}
-                  </ScrollArea>
-                </SelectContent>
-              </Select>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Dodaj Nowy Tor</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="p-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="newTrackName">Nazwa Toru</Label>
-                  <Input
-                    id="newTrackName"
-                    placeholder="Wprowadź nazwę toru"
-                    value={newTrackName}
-                    onChange={handleTrackNameChange}
-                  />
-                  <Button type="button" size="sm" onClick={handleAddTrack}>
-                    Dodaj Tor
-                  </Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="grid gap-2">
-              <Label htmlFor="lapTime">Czas Okrążenia (sekundy)</Label>
+              <Label htmlFor="lapTime">New Lap Time (seconds)</Label>
               <Input
                 id="lapTime"
                 type="number"
-                placeholder="Wprowadź czas okrążenia"
-                value={lapTime !== undefined ? lapTime.toString() : ""}
-                onChange={handleLapTimeChange}
+                placeholder="Enter new lap time"
+                value={newLapTime !== undefined ? newLapTime.toString() : ""}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setNewLapTime(isNaN(value) ? undefined : value);
+                }}
               />
             </div>
             <div className="grid gap-2">
-              <Label>Data</Label>
+              <Label>Date</Label>
               <Calendar
                 mode="single"
-                selected={date}
-                onSelect={setDate}
+                selected={newDate}
+                onSelect={setNewDate}
                 className={cn("rounded-md border")}
               />
-              {date ? (
-                <p className="text-sm text-muted-foreground">
-                  Wybrana data: {format(date, "PPP")}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Wybierz datę.
-                </p>
-              )}
             </div>
-            <Button onClick={handleSubmit}>Dodaj Czas Okrążenia</Button>
-          </CardContent>
-        </Card>
-
-        <Card className="w-full md:w-1/2 bg-card text-card-foreground">
-          <CardHeader>
-            <CardTitle>Lista Czasów Okrążeń</CardTitle>
-            <CardDescription>Lista Twoich najlepszych czasów okrążeń dla każdego toru.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {lapTimes.length === 0 ? (
-              <p>Brak dodanych czasów okrążeń.</p>
-            ) : (
-              <ul className="list-none p-0">
-                {lapTimes.sort((a, b) => a.date.getTime() - b.date.getTime()).map((entry, index) => (
-                  <li key={index} className="mb-2 p-2 rounded-md shadow-sm flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div>
-                        <p className="font-medium">{entry.trackName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Czas: {entry.lapTime.toFixed(3)} - {format(entry.date, "PPP")}
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-       </div>
+          </div>
+          <Button onClick={() => handleUpdateLapTime(selectedTrack)}>
+            Update Lap Time
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
-
-
