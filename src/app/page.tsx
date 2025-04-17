@@ -39,7 +39,7 @@ type LapTimeEntry = {
   date: Date;
 };
 
-const predefinedTracks = [
+const initialTracks = [
   "WRT Kapelanka",
   "WRT Nowa Huta",
   "ICF Rzeszów",
@@ -58,6 +58,8 @@ export default function Home() {
   const [selectedTrack, setSelectedTrack] = useState("");
   const [newLapTime, setNewLapTime] = useState<number | undefined>(undefined);
   const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [tracks, setTracks] = useState<string[]>(initialTracks);
+  const [isAddingTrack, setIsAddingTrack] = useState(false);
   const [newTrackName, setNewTrackName] = useState("");
 
   const handleOpenChange = () => {
@@ -69,14 +71,15 @@ export default function Home() {
   };
 
   const handleAddTrack = () => {
-    if (newTrackName && !predefinedTracks.includes(newTrackName)) {
-      predefinedTracks.push(newTrackName);
+    if (newTrackName && !tracks.includes(newTrackName)) {
+      setTracks([...tracks, newTrackName]);
       setNewTrackName("");
+      setIsAddingTrack(false);
       toast({
         title: "Sukces",
         description: "Tor dodany do listy.",
       });
-    } else if (newTrackName && predefinedTracks.includes(newTrackName)) {
+    } else if (newTrackName && tracks.includes(newTrackName)) {
       toast({
         title: "Błąd",
         description: "Tor już jest na liście.",
@@ -156,20 +159,20 @@ export default function Home() {
         <CardContent className="flex flex-col items-center">
           {latestLap ? (
             <>
-              <p className="text-sm text-center">
+              <p className="text-sm text-center text-white">
                 Najlepszy czas: {latestLap.lapTime.toFixed(3)}s
               </p>
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-xs text-muted-foreground text-center text-white">
                 Data: {format(latestLap.date, "PPP")}
               </p>
               {timeDifference && (
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-muted-foreground text-center text-white">
                   Różnica: {timeDifference}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-sm text-center">Brak okrążeń.</p>
+            <p className="text-sm text-center text-white">Brak okrążeń.</p>
           )}
         </CardContent>
       </Card>
@@ -178,10 +181,25 @@ export default function Home() {
 
   const AddTrackTile = () => {
     return (
-      <Card className="w-64 h-48 bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center">
-        <Button variant="ghost" size="lg" onClick={() => {}}>
-          <Plus/>
-        </Button>
+      <Card className="w-64 h-48 bg-secondary text-secondary-foreground shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-center"
+           onClick={() => setIsAddingTrack(true)}>
+        {isAddingTrack ? (
+          <div className="flex flex-col items-center justify-center p-4">
+            <Input
+              type="text"
+              placeholder="Nazwa toru"
+              value={newTrackName}
+              onChange={handleTrackNameChange}
+              className="mb-2 text-black"
+            />
+            <Button onClick={handleAddTrack} className="w-full">Dodaj Tor</Button>
+          </div>
+        ) : (
+          <Button variant="ghost" size="lg" onClick={() => setIsAddingTrack(true)}>
+            <Plus />
+            <span className="text-white">Dodaj Tor</span>
+          </Button>
+        )}
       </Card>
     );
   };
@@ -190,7 +208,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
       <h1 className="text-3xl font-bold mb-4 text-foreground">MyKart</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl">
-        {predefinedTracks.map((track) => (
+        {tracks.map((track) => (
           <TrackTile key={track} trackName={track} />
         ))}
         <AddTrackTile />
@@ -202,7 +220,7 @@ export default function Home() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="lapTime">Nowy czas okrążenia (sekundy)</Label>
+              <Label htmlFor="lapTime" className="text-white">Nowy czas okrążenia (sekundy)</Label>
               <Input
                 id="lapTime"
                 type="number"
@@ -212,10 +230,11 @@ export default function Home() {
                   const value = parseFloat(e.target.value);
                   setNewLapTime(isNaN(value) ? undefined : value);
                 }}
+                className="text-black"
               />
             </div>
             <div className="grid gap-2">
-              <Label>Data</Label>
+              <Label className="text-white">Data</Label>
               <Calendar
                 mode="single"
                 selected={newDate}
