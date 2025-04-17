@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { Icons } from "@/components/icons";
 
 type LapTimeEntry = {
   trackName: string;
@@ -18,8 +19,18 @@ type LapTimeEntry = {
   date: Date;
 };
 
+const predefinedTracks = [
+  "WRT Kapelanka",
+  "WRT Nowa Huta",
+  "ICF Rzeszów",
+  "Reskart Rzeszów",
+  "E1 Chorzów",
+  "Go Karting Center",
+];
+
 export default function Home() {
-  const [trackName, setTrackName] = useState("");
+  const [selectedTrack, setSelectedTrack] = useState("");
+  const [newTrackName, setNewTrackName] = useState("");
   const [lapTime, setLapTime] = useState<number | undefined>(undefined);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [lapTimes, setLapTimes] = useState<LapTimeEntry[]>([]);
@@ -27,7 +38,7 @@ export default function Home() {
   const { toast } = useToast();
 
   const handleTrackNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTrackName(e.target.value);
+    setNewTrackName(e.target.value);
   };
 
   const handleLapTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,18 +46,43 @@ export default function Home() {
     setLapTime(isNaN(value) ? undefined : value);
   };
 
-  const handleSubmit = () => {
-    if (!trackName || !lapTime || !date) {
+  const handleAddTrack = () => {
+    if (newTrackName && !predefinedTracks.includes(newTrackName)) {
+      predefinedTracks.push(newTrackName);
+      setNewTrackName("");
       toast({
-        title: "Error",
-        description: "Please fill in all fields.",
+        title: "Sukces",
+        description: "Tor dodany do listy.",
+      });
+    }
+     else if (newTrackName && predefinedTracks.includes(newTrackName)) {
+       toast({
+         title: "Błąd",
+         description: "Tor już jest na liście.",
+         variant: "destructive",
+       });
+     }
+    else {
+      toast({
+        title: "Błąd",
+        description: "Wprowadź nazwę toru.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!selectedTrack || !lapTime || !date) {
+      toast({
+        title: "Błąd",
+        description: "Wypełnij wszystkie pola.",
         variant: "destructive",
       });
       return;
     }
 
     const newLapTimeEntry: LapTimeEntry = {
-      trackName,
+      trackName: selectedTrack,
       lapTime,
       date,
     };
@@ -56,90 +92,111 @@ export default function Home() {
     if (!bestLap || lapTime < bestLap.lapTime) {
       setBestLap(newLapTimeEntry);
       toast({
-        title: "New Best Lap!",
-        description: `New best lap time for ${trackName}: ${lapTime.toFixed(3)}`,
+        title: "Nowy Najlepszy Czas!",
+        description: `Nowy najlepszy czas dla ${selectedTrack}: ${lapTime.toFixed(3)}`,
       });
     } else {
-       toast({
-         title: "Lap Time Added",
-         description: `Lap time for ${trackName}: ${lapTime.toFixed(3)}`,
-       });
+      toast({
+        title: "Dodano Czas Okrążenia",
+        description: `Czas okrążenia dla ${selectedTrack}: ${lapTime.toFixed(3)}`,
+      });
     }
 
-    setTrackName("");
+    setSelectedTrack("");
     setLapTime(undefined);
     setDate(undefined);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
       <h1 className="text-3xl font-bold mb-4">MyKart</h1>
       <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
-        <Card className="w-full md:w-1/2">
+        <Card className="w-full md:w-1/2 bg-black">
           <CardHeader>
-            <CardTitle>Add New Lap Time</CardTitle>
-            <CardDescription>Enter the track name, lap time, and date.</CardDescription>
+            <CardTitle>Dodaj Nowy Czas Okrążenia</CardTitle>
+            <CardDescription>Wprowadź nazwę toru, czas okrążenia i datę.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="trackName">Track Name</Label>
-              <Input
-                id="trackName"
-                placeholder="Enter track name"
-                value={trackName}
-                onChange={handleTrackNameChange}
-              />
+              <Label htmlFor="trackName">Nazwa Toru</Label>
+              <Select onValueChange={setSelectedTrack}>
+                <SelectTrigger className="text-white">
+                  <SelectValue placeholder="Wybierz tor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <ScrollArea className="h-[200px] w-[inherit]">
+                    {predefinedTracks.map((track) => (
+                      <SelectItem key={track} value={track}>
+                        {track}
+                      </SelectItem>
+                    ))}
+                  </ScrollArea>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="lapTime">Lap Time (seconds)</Label>
+              <Label htmlFor="newTrackName">Dodaj Nowy Tor</Label>
+              <Input
+                id="newTrackName"
+                placeholder="Wprowadź nazwę toru"
+                value={newTrackName}
+                onChange={handleTrackNameChange}
+                className="text-white"
+              />
+              <Button type="button" size="sm" onClick={handleAddTrack}>
+                Dodaj Tor
+              </Button>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lapTime">Czas Okrążenia (sekundy)</Label>
               <Input
                 id="lapTime"
                 type="number"
-                placeholder="Enter lap time"
+                placeholder="Wprowadź czas okrążenia"
                 value={lapTime !== undefined ? lapTime.toString() : ""}
                 onChange={handleLapTimeChange}
+                className="text-white"
               />
             </div>
             <div className="grid gap-2">
-              <Label>Date</Label>
+              <Label>Data</Label>
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                className={cn("rounded-md border")}
+                className={cn("rounded-md border text-white")}
               />
               {date ? (
                 <p className="text-sm text-muted-foreground">
-                  Selected date: {format(date, "PPP")}
+                  Wybrana data: {format(date, "PPP")}
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Please select a date.
+                  Wybierz datę.
                 </p>
               )}
             </div>
-            <Button onClick={handleSubmit}>Add Lap Time</Button>
+            <Button onClick={handleSubmit}>Dodaj Czas Okrążenia</Button>
           </CardContent>
         </Card>
 
-        <Card className="w-full md:w-1/2">
+        <Card className="w-full md:w-1/2 bg-black">
           <CardHeader>
-            <CardTitle>Lap Time List</CardTitle>
-            <CardDescription>List of your best lap times for each track.</CardDescription>
+            <CardTitle>Lista Czasów Okrążeń</CardTitle>
+            <CardDescription>Lista Twoich najlepszych czasów okrążeń dla każdego toru.</CardDescription>
           </CardHeader>
           <CardContent>
             {lapTimes.length === 0 ? (
-              <p>No lap times added yet.</p>
+              <p>Brak dodanych czasów okrążeń.</p>
             ) : (
               <ul className="list-none p-0">
                 {lapTimes.sort((a, b) => a.date.getTime() - b.date.getTime()).map((entry, index) => (
                   <li key={index} className="mb-2 p-2 rounded-md shadow-sm flex items-center justify-between">
                     <div className="flex items-center">
-                      {/* <Icons.racingFlag className="mr-2 h-4 w-4" /> */}
                       <div>
                         <p className="font-medium">{entry.trackName}</p>
                         <p className="text-sm text-muted-foreground">
-                          Lap Time: {entry.lapTime.toFixed(3)} - {format(entry.date, "PPP")}
+                          Czas: {entry.lapTime.toFixed(3)} - {format(entry.date, "PPP")}
                         </p>
                       </div>
                     </div>
@@ -150,6 +207,6 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
-    </div>
+       </div>
   );
 }
