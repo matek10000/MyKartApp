@@ -35,14 +35,11 @@ export default function Home() {
   };
 
   const handleStartNow = () => {
-    router.push("/tracks");
+    router.push("/registerform");
   };
 
   const handleLogIn = () => {
-    toast({
-      title: "Informacja",
-      description: "Funkcja logowania nie została jeszcze wdrożona.",
-    });
+    router.push("/loginform");
   };
 
     const handleTest = () => {
@@ -70,3 +67,4 @@ export default function Home() {
     </div>
   );
 }
+
